@@ -738,7 +738,7 @@
     </div>
     <button class="cw-close" id="cwClose">×</button>
   </div>
-  <div class="cw-demo-tag">Live demo — stel uw vraag</div>
+  <div class="cw-demo-tag">Uw gids — tarieven, werkwijze &amp; meer</div>
   <div class="cw-body" id="cwBody"></div>
   <div class="cw-foot">
     <input type="text" id="cwInput" placeholder="Typ een bericht…">
@@ -760,9 +760,9 @@
 
   // ===== LIVE BOT (Claude API via Aigentera backend) =====
   var API_BASE='https://aigentera-messenger.onrender.com';
-  async function askBot(history,text){
+  async function askBot(history,text,niche){
     history.push({role:'user',content:text});
-    const r=await fetch(API_BASE+'/api/chat/aiesthetica',{
+    const r=await fetch(API_BASE+'/api/chat/'+(niche||'aiesthetica'),{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({messages:history})
     });
@@ -808,16 +808,16 @@
     setTimeout(()=>{t.remove();add(text,'bot');then&&then();},after||1100);
   }
   function runDemo(){
-    botSay('Welkom bij uw kliniek ✨ Ik ben uw AI-assistent. Waarmee kan ik u helpen?',900,()=>{
-      chips(['Botox','Fillers','Afspraak maken']);
+    botSay('Welkom bij Aiesthetica 👋 Ik vertel u graag alles over onze AI-receptionist: tarieven, werkwijze en mogelijkheden. Waarmee kan ik helpen?',900,()=>{
+      chips(['Tarieven','Hoe werkt het?','Gratis demo aanvragen']);
     });
   }
-  // 👉 Live bot: echte Claude API via backend
+  // 👉 Live bot: gids over Aiesthetica (tarieven, werkwijze, info)
   var cwHistory=[],cwBusy=false;
   function respond(q){
     if(cwBusy)return;cwBusy=true;
     const t=typing();
-    askBot(cwHistory,q)
+    askBot(cwHistory,q,'aiesthetica-gids')
       .then(reply=>{t.remove();add(reply,'bot');})
       .catch(()=>{t.remove();add(BOT_ERR,'bot');})
       .finally(()=>{cwBusy=false;});
@@ -886,7 +886,7 @@
 
   function heroStart(){
     if(heroStarted)return;heroStarted=true;
-    heroBot('Welkom ✨ Ik ben uw AI-assistent. Stel gerust een vraag, of kies hieronder.',900,()=>heroChips(['Botox','Fillers','Afspraak']));
+    heroBot('Welkom ✨ Ik ben de assistent van de kliniek. Waarmee kan ik u helpen?',900);
   }
   function heroSendTyped(){
     const v=heroInput.value.trim();if(!v)return;
