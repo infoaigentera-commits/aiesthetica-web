@@ -754,6 +754,18 @@
   const nav=document.getElementById('nav');
   addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>30));
 
+  // ankerlinks: scroll zonder #hash in de URL
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const el=document.querySelector(a.getAttribute('href'));
+      if(!el)return;
+      e.preventDefault();
+      el.scrollIntoView({behavior:'smooth'});
+      history.replaceState(null,'',location.pathname+location.search);
+    });
+  });
+  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+
   // reveal on scroll
   const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.14});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
