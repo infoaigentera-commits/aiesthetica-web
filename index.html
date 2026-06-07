@@ -760,8 +760,8 @@
       const el=document.querySelector(a.getAttribute('href'));
       if(!el)return;
       e.preventDefault();
-      el.scrollIntoView({behavior:'smooth'});
       history.replaceState(null,'',location.pathname+location.search);
+      requestAnimationFrame(()=>el.scrollIntoView({behavior:'smooth'}));
     });
   });
   if(location.hash)history.replaceState(null,'',location.pathname+location.search);
