@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aiesthetica — AI-receptionist voor esthetische klinieken</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171311;
+    --espresso:#0f0c0a;
+    --bone:#f4efe8;
+    --paper:#fbf8f3;
+    --champagne:#c2a06b;
+    --champagne-deep:#a8854f;
+    --blush:#d9b3a3;
+    --line:rgba(23,19,17,.12);
+    --muted:#6f655c;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Hanken Grotesk',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+  h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.05;letter-spacing:-.01em}
+  .eyebrow{
+    font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--champagne-deep);font-weight:600;
+  }
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 40px;
+    background:rgba(251,248,243,.78);
+    backdrop-filter:blur(14px);
+    border-bottom:1px solid transparent;
+    transition:border-color .4s,padding .4s;
+  }
+  nav.scrolled{border-bottom-color:var(--line);padding:14px 40px}
+  .logo{font-family:var(--serif);font-size:23px;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+  .logo b{font-weight:500}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--champagne);box-shadow:0 0 0 4px rgba(194,160,107,.2)}
+  .nav-cta{
+    font-family:var(--sans);font-size:14px;font-weight:500;
+    padding:11px 22px;border:1px solid var(--ink);border-radius:40px;
+    color:var(--ink);text-decoration:none;transition:.3s;
+  }
+  .nav-cta:hover{background:var(--ink);color:var(--paper)}
+  .nav-links{display:flex;gap:34px;align-items:center}
+  .nav-links a{color:var(--ink);text-decoration:none;font-size:14.5px;font-weight:400;opacity:.7;transition:.2s}
+  .nav-links a:hover{opacity:1}
+  @media(max-width:860px){.nav-links a:not(.nav-cta){display:none}}
+
+  /* HERO */
+  header{
+    position:relative;padding:190px 0 110px;
+    background:
+      radial-gradient(120% 90% at 85% 0%,rgba(194,160,107,.16),transparent 55%),
+      radial-gradient(80% 70% at 0% 100%,rgba(217,179,163,.14),transparent 60%),
+      var(--paper);
+    overflow:hidden;
+  }
+  header:before{
+    content:"";position:absolute;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+    opacity:.025;pointer-events:none;
+  }
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:60px;align-items:center;position:relative}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:48px}}
+  .hero-tag{display:inline-flex;align-items:center;gap:9px;margin-bottom:26px}
+  .hero-tag .line{width:34px;height:1px;background:var(--champagne-deep)}
+  h1.hero-title{font-size:clamp(40px,5.6vw,72px);margin-bottom:24px}
+  h1.hero-title em{font-style:italic;color:var(--champagne-deep)}
+  .hero-sub{font-size:18.5px;color:var(--muted);max-width:480px;margin-bottom:36px}
+  .hero-actions{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  .btn-primary{
+    background:var(--ink);color:var(--paper);text-decoration:none;
+    padding:16px 32px;border-radius:44px;font-weight:500;font-size:15.5px;
+    display:inline-flex;align-items:center;gap:10px;transition:.3s;border:1px solid var(--ink);
+  }
+  .btn-primary:hover{background:transparent;color:var(--ink);transform:translateY(-2px)}
+  .btn-ghost{color:var(--ink);text-decoration:none;font-weight:500;font-size:15.5px;display:inline-flex;align-items:center;gap:9px;opacity:.75;transition:.2s}
+  .btn-ghost:hover{opacity:1;gap:14px}
+
+  /* hero device mock */
+  .device{
+    position:relative;background:var(--espresso);border-radius:30px;padding:14px;
+    box-shadow:0 40px 80px -30px rgba(15,12,10,.5),0 8px 24px -12px rgba(15,12,10,.4);
+    transform:rotate(1.5deg);
+  }
+  .device-screen{background:#16110e;border-radius:20px;overflow:hidden}
+  .dev-head{display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .dev-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--champagne),var(--blush));flex-shrink:0}
+  .dev-head .nm{color:#f4efe8;font-weight:600;font-size:14.5px}
+  .dev-head .st{color:#7fae87;font-size:12px;display:flex;align-items:center;gap:5px}
+  .dev-head .st:before{content:"";width:6px;height:6px;border-radius:50%;background:#7fae87}
+  .dev-body{padding:18px;display:flex;flex-direction:column;gap:11px;min-height:300px;max-height:300px;overflow-y:auto}
+  .dev-body::-webkit-scrollbar{width:4px}.dev-body::-webkit-scrollbar-thumb{background:rgba(244,239,232,.15);border-radius:4px}
+  .dev-foot{display:flex;align-items:center;gap:9px;padding:13px 16px;border-top:1px solid rgba(255,255,255,.07)}
+  .dev-foot input{flex:1;background:rgba(244,239,232,.06);border:1px solid rgba(244,239,232,.1);border-radius:30px;padding:10px 15px;color:#f4efe8;font-family:var(--sans);font-size:13px;outline:none}
+  .dev-foot input::placeholder{color:rgba(244,239,232,.4)}
+  .dev-send{width:37px;height:37px;border-radius:50%;background:var(--champagne);border:none;cursor:pointer;color:#1a1410;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .dev-chips{display:flex;gap:7px;flex-wrap:wrap;align-self:flex-start}
+  .dev-chip{font-size:11.5px;padding:6px 12px;border:1px solid rgba(194,160,107,.4);color:var(--champagne);border-radius:30px;background:none;cursor:pointer;transition:.2s;font-family:var(--sans)}
+  .dev-chip:hover{background:rgba(194,160,107,.14)}
+  .dev-typing{align-self:flex-start;display:flex;gap:4px;padding:11px 14px;background:#241c16;border-radius:16px;border-bottom-left-radius:4px}
+  .dev-typing span{width:6px;height:6px;border-radius:50%;background:rgba(244,239,232,.5);animation:blink 1.2s infinite}
+  .dev-typing span:nth-child(2){animation-delay:.2s}.dev-typing span:nth-child(3){animation-delay:.4s}
+  .bub{max-width:80%;padding:11px 15px;font-size:13.5px;line-height:1.5;border-radius:16px;opacity:0;transform:translateY(8px);animation:pop .5s forwards}
+  .bub.bot{background:#241c16;color:#ece3d8;border-bottom-left-radius:4px;align-self:flex-start}
+  .bub.usr{background:var(--champagne);color:#1a1410;border-bottom-right-radius:4px;align-self:flex-end;font-weight:500}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;align-self:flex-start;opacity:0;animation:pop .5s forwards}
+  .chip{font-size:11.5px;padding:6px 12px;border:1px solid rgba(194,160,107,.4);color:var(--champagne);border-radius:30px}
+  @keyframes pop{to{opacity:1;transform:translateY(0)}}
+
+  /* MARQUEE / trust strip */
+  .strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bone);padding:22px 0}
+  .strip-inner{display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+  .strip-inner span{display:flex;align-items:center;gap:9px}
+  .strip-inner b{color:var(--ink);font-weight:600;font-family:var(--serif);font-size:15px}
+
+  /* SECTION shell */
+  section{padding:104px 0}
+  .sec-head{max-width:640px;margin-bottom:56px}
+  .sec-head h2{font-size:clamp(30px,3.8vw,46px);margin:18px 0 16px}
+  .sec-head p{font-size:17px;color:var(--muted)}
+
+  /* PROBLEM */
+  .prob{background:var(--espresso);color:var(--bone)}
+  .prob .eyebrow{color:var(--champagne)}
+  .prob h2{color:var(--bone)}
+  .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:14px}
+  @media(max-width:840px){.prob-grid{grid-template-columns:1fr}}
+  .prob-card{padding:32px 28px;border:1px solid rgba(244,239,232,.13);border-radius:18px;background:rgba(244,239,232,.02);transition:.4s}
+  .prob-card:hover{background:rgba(194,160,107,.07);border-color:rgba(194,160,107,.35);transform:translateY(-4px)}
+  .prob-card .big{font-family:var(--serif);font-size:46px;color:var(--champagne);line-height:1;margin-bottom:14px}
+  .prob-card h3{font-size:20px;color:var(--bone);margin-bottom:9px}
+  .prob-card p{font-size:14.5px;color:rgba(244,239,232,.6)}
+
+  /* FEATURES */
+  .feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+  @media(max-width:760px){.feat-grid{grid-template-columns:1fr}}
+  .feat{background:var(--paper);padding:40px 36px;transition:.35s}
+  .feat:hover{background:var(--bone)}
+  .feat .ic{width:48px;height:48px;border-radius:13px;background:var(--ink);color:var(--champagne);display:flex;align-items:center;justify-content:center;margin-bottom:22px;font-size:21px}
+  .feat h3{font-size:22px;margin-bottom:11px}
+  .feat p{font-size:15px;color:var(--muted)}
+
+  /* STATS / social proof */
+  .stats{background:var(--bone)}
+  .stats .sec-head{margin:0 auto 60px;text-align:center}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+  @media(max-width:840px){.stat-row{grid-template-columns:repeat(2,1fr);gap:18px}}
+  .stat{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:34px 26px;text-align:left;position:relative;overflow:hidden}
+  .stat:before{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--champagne),var(--blush))}
+  .stat .num{font-family:var(--serif);font-size:46px;color:var(--ink);line-height:1;letter-spacing:-.02em}
+  .stat .num small{font-size:24px;color:var(--champagne-deep)}
+  .stat .lbl{font-size:14px;color:var(--ink);font-weight:500;margin:12px 0 7px}
+  .stat .src{font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+  .stats-note{text-align:center;margin-top:34px;font-size:12.5px;color:var(--muted);max-width:640px;margin-left:auto;margin-right:auto}
+
+  /* HOW */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;counter-reset:s}
+  @media(max-width:760px){.steps{grid-template-columns:1fr;gap:28px}}
+  .step{position:relative;padding-top:30px}
+  .step:before{counter-increment:s;content:counter(s,decimal-leading-zero);font-family:var(--serif);font-size:15px;color:var(--champagne-deep);position:absolute;top:0;left:0;letter-spacing:.1em;font-weight:500}
+  .step .bar{height:1px;background:var(--line);margin-bottom:24px;position:relative}
+  .step .bar:after{content:"";position:absolute;left:0;top:0;width:34px;height:1px;background:var(--champagne)}
+  .step h3{font-size:23px;margin-bottom:12px}
+  .step p{font-size:15px;color:var(--muted)}
+
+  /* PRICING */
+  .pricing{background:var(--espresso);color:var(--bone)}
+  .pricing .eyebrow{color:var(--champagne)}
+  .pricing h2{color:var(--bone)}
+  .pricing .sec-head{margin:0 auto 56px;text-align:center}
+  .pricing .sec-head p{color:rgba(244,239,232,.6)}
+  .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:stretch}
+  @media(max-width:880px){.price-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto}}
+  .plan{background:rgba(244,239,232,.03);border:1px solid rgba(244,239,232,.13);border-radius:22px;padding:38px 32px;display:flex;flex-direction:column;transition:.4s}
+  .plan:hover{transform:translateY(-6px);border-color:rgba(194,160,107,.4)}
+  .plan.feat-plan{background:linear-gradient(180deg,rgba(194,160,107,.14),rgba(244,239,232,.03));border-color:var(--champagne);position:relative}
+  .plan.feat-plan:before{content:"Meest gekozen";position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--champagne);color:#1a1410;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:6px 16px;border-radius:30px}
+  .plan .pname{font-family:var(--serif);font-size:25px;color:var(--bone);margin-bottom:6px}
+  .plan .pdesc{font-size:13.5px;color:rgba(244,239,232,.55);margin-bottom:24px;min-height:38px}
+  .plan .pprice{font-family:var(--serif);font-size:44px;color:var(--bone);line-height:1}
+  .plan .pprice span{font-size:16px;color:rgba(244,239,232,.6);font-family:var(--sans)}
+  .plan .psetup{font-size:13px;color:var(--champagne);margin:10px 0 26px}
+  .plan ul{list-style:none;margin-bottom:30px;flex:1}
+  .plan li{font-size:14.5px;color:rgba(244,239,232,.82);padding:9px 0 9px 28px;position:relative;border-bottom:1px solid rgba(244,239,232,.07)}
+  .plan li:before{content:"✓";position:absolute;left:0;color:var(--champagne);font-weight:600}
+  .plan li.off{color:rgba(244,239,232,.32)}
+  .plan li.off:before{content:"–";color:rgba(244,239,232,.3)}
+  .plan-btn{text-align:center;padding:14px;border-radius:44px;font-weight:500;font-size:15px;text-decoration:none;transition:.3s;border:1px solid rgba(244,239,232,.3);color:var(--bone)}
+  .plan-btn:hover{background:rgba(244,239,232,.08)}
+  .plan.feat-plan .plan-btn{background:var(--champagne);color:#1a1410;border-color:var(--champagne)}
+  .plan.feat-plan .plan-btn:hover{background:#d4b787}
+
+  /* CTA */
+  .cta{text-align:center;background:
+    radial-gradient(80% 120% at 50% 0%,rgba(194,160,107,.16),transparent 60%),var(--paper)}
+  .cta h2{font-size:clamp(32px,4.6vw,58px);max-width:760px;margin:18px auto 22px}
+  .cta h2 em{font-style:italic;color:var(--champagne-deep)}
+  .cta p{font-size:18px;color:var(--muted);max-width:520px;margin:0 auto 38px}
+
+  /* FOOTER */
+  footer{background:var(--espresso);color:rgba(244,239,232,.6);padding:54px 0 40px}
+  .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
+  .foot .logo{color:var(--bone)}
+  .foot a{color:rgba(244,239,232,.6);text-decoration:none;font-size:14px;transition:.2s}
+  .foot a:hover{color:var(--champagne)}
+  .foot-links{display:flex;gap:28px;flex-wrap:wrap}
+  .foot-base{margin-top:32px;padding-top:24px;border-top:1px solid rgba(244,239,232,.1);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+  /* ROI CALCULATOR */
+  .roi{background:var(--paper)}
+  .roi-card{background:var(--espresso);border-radius:26px;padding:54px;display:grid;grid-template-columns:1fr 1fr;gap:54px;align-items:center;overflow:hidden;position:relative}
+  .roi-card:before{content:"";position:absolute;top:-40%;right:-10%;width:380px;height:380px;background:radial-gradient(circle,rgba(194,160,107,.18),transparent 70%);pointer-events:none}
+  @media(max-width:820px){.roi-card{grid-template-columns:1fr;gap:36px;padding:38px 28px}}
+  .roi-card .eyebrow{color:var(--champagne)}
+  .roi-card h2{color:var(--bone);font-size:clamp(26px,3vw,38px);margin:14px 0 14px}
+  .roi-card p.roi-intro{color:rgba(244,239,232,.6);font-size:15.5px}
+  .roi-field{margin-bottom:24px}
+  .roi-field label{display:flex;justify-content:space-between;align-items:baseline;color:var(--bone);font-size:14.5px;font-weight:500;margin-bottom:12px}
+  .roi-field label b{font-family:var(--serif);color:var(--champagne);font-size:20px;font-weight:500}
+  .roi-field input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:4px;background:rgba(244,239,232,.15);outline:none}
+  .roi-field input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--champagne);cursor:pointer;border:3px solid var(--espresso);box-shadow:0 0 0 1px var(--champagne)}
+  .roi-field input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--champagne);cursor:pointer;border:3px solid var(--espresso)}
+  .roi-result{background:rgba(244,239,232,.04);border:1px solid rgba(194,160,107,.3);border-radius:18px;padding:30px;text-align:center;margin-top:8px}
+  .roi-result .rlbl{color:rgba(244,239,232,.6);font-size:13.5px;letter-spacing:.04em}
+  .roi-result .rnum{font-family:var(--serif);font-size:clamp(40px,6vw,60px);color:var(--champagne);line-height:1;margin:8px 0;letter-spacing:-.02em}
+  .roi-result .rsub{color:rgba(244,239,232,.55);font-size:13px}
+  .roi-result .rwin{margin-top:18px;padding-top:18px;border-top:1px solid rgba(244,239,232,.1);color:var(--bone);font-size:14px}
+  .roi-result .rwin b{color:var(--champagne)}
+
+  /* FAQ */
+  .faq-wrap{max-width:780px;margin:0 auto}
+  .faq-item{border-bottom:1px solid var(--line)}
+  .faq-q{width:100%;background:none;border:none;text-align:left;cursor:pointer;padding:26px 44px 26px 0;font-family:var(--serif);font-size:20px;color:var(--ink);position:relative;line-height:1.3}
+  .faq-q:after{content:"+";position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:26px;color:var(--champagne-deep);font-family:var(--sans);transition:transform .3s}
+  .faq-item.open .faq-q:after{transform:translateY(-50%) rotate(45deg)}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
+  .faq-a p{padding:0 44px 26px 0;font-size:15.5px;color:var(--muted)}
+
+  /* CONTACT FORM */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:560px;margin:0 auto;text-align:left}
+  @media(max-width:560px){.form-grid{grid-template-columns:1fr}}
+  .form-grid .full{grid-column:1/-1}
+  .form-grid label{display:block;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:7px}
+  .form-grid input,.form-grid textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-family:var(--sans);font-size:15px;color:var(--ink);outline:none;transition:border-color .2s}
+  .form-grid input:focus,.form-grid textarea:focus{border-color:var(--champagne)}
+  .form-grid textarea{resize:vertical;min-height:96px}
+  .form-submit{width:100%;background:var(--ink);color:var(--paper);border:1px solid var(--ink);padding:16px;border-radius:44px;font-family:var(--sans);font-weight:500;font-size:15.5px;cursor:pointer;transition:.3s}
+  .form-submit:hover{background:transparent;color:var(--ink)}
+  .form-note{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+  .form-ok{display:none;background:rgba(127,174,135,.12);border:1px solid rgba(127,174,135,.4);color:#3f6b47;border-radius:14px;padding:20px;text-align:center;font-size:15px;max-width:560px;margin:0 auto}
+
+  /* iPhone auto-zoom fix: chat inputai >=16px */
+  @media(max-width:768px){
+    .dev-foot input,.cw-foot input{font-size:16px!important}
+  }
+
+  /* mobile polish */
+  @media(max-width:900px){
+    .device{transform:none !important;margin-top:8px}
+    header{padding:150px 0 80px}
+    nav{padding:16px 22px}
+    .wrap{padding:0 22px}
+    section{padding:78px 0}
+    .roi-result .rnum{font-size:46px}
+  }
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ===== CHAT WIDGET ===== */
+  .cw-launch{
+    position:fixed;bottom:26px;right:26px;z-index:1000;
+    width:64px;height:64px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--ink);color:var(--champagne);
+    box-shadow:0 14px 34px -8px rgba(15,12,10,.55);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .3s;
+  }
+  .cw-launch:hover{transform:scale(1.07)}
+  .cw-launch svg{width:28px;height:28px}
+  .cw-badge{position:absolute;top:-3px;right:-3px;width:18px;height:18px;background:var(--blush);border-radius:50%;border:2px solid var(--paper);font-size:10px;color:#1a1410;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .cw-panel{
+    position:fixed;bottom:104px;right:26px;z-index:1000;
+    width:370px;max-width:calc(100vw - 40px);height:540px;max-height:calc(100vh - 140px);
+    background:var(--espresso);border-radius:24px;overflow:hidden;
+    box-shadow:0 30px 70px -20px rgba(15,12,10,.6);
+    display:flex;flex-direction:column;
+    opacity:0;transform:translateY(20px) scale(.97);pointer-events:none;
+    transition:opacity .35s,transform .35s;
+  }
+  .cw-panel.open{opacity:1;transform:none;pointer-events:auto}
+  .cw-head{padding:18px 20px;background:linear-gradient(135deg,#1d1611,#12100d);display:flex;align-items:center;gap:13px;border-bottom:1px solid rgba(244,239,232,.08)}
+  .cw-head .av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--champagne),var(--blush));flex-shrink:0}
+  .cw-head .nm{color:#f4efe8;font-weight:600;font-size:15px}
+  .cw-head .st{color:#7fae87;font-size:11.5px;display:flex;align-items:center;gap:5px;margin-top:2px}
+  .cw-head .st:before{content:"";width:6px;height:6px;border-radius:50%;background:#7fae87}
+  .cw-close{margin-left:auto;background:none;border:none;color:rgba(244,239,232,.5);cursor:pointer;font-size:22px;line-height:1;padding:4px}
+  .cw-demo-tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--champagne);background:rgba(194,160,107,.14);text-align:center;padding:6px}
+  .cw-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:11px}
+  .cw-body::-webkit-scrollbar{width:5px}.cw-body::-webkit-scrollbar-thumb{background:rgba(244,239,232,.15);border-radius:4px}
+  .cw-msg{max-width:82%;padding:11px 15px;font-size:14px;line-height:1.5;border-radius:16px}
+  .cw-msg.bot{background:#241c16;color:#ece3d8;border-bottom-left-radius:4px;align-self:flex-start}
+  .cw-msg.usr{background:var(--champagne);color:#1a1410;border-bottom-right-radius:4px;align-self:flex-end;font-weight:500}
+  .cw-chips{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start}
+  .cw-chip{font-size:13px;padding:8px 14px;border:1px solid rgba(194,160,107,.4);color:var(--champagne);border-radius:30px;background:none;cursor:pointer;transition:.2s;font-family:var(--sans)}
+  .cw-chip:hover{background:rgba(194,160,107,.14)}
+  .cw-typing{align-self:flex-start;display:flex;gap:4px;padding:13px 16px;background:#241c16;border-radius:16px;border-bottom-left-radius:4px}
+  .cw-typing span{width:7px;height:7px;border-radius:50%;background:rgba(244,239,232,.5);animation:blink 1.2s infinite}
+  .cw-typing span:nth-child(2){animation-delay:.2s}.cw-typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+  .cw-foot{padding:13px 16px;border-top:1px solid rgba(244,239,232,.08);display:flex;align-items:center;gap:10px}
+  .cw-foot input{flex:1;background:rgba(244,239,232,.06);border:1px solid rgba(244,239,232,.1);border-radius:30px;padding:11px 16px;color:#f4efe8;font-family:var(--sans);font-size:13.5px;outline:none}
+  .cw-foot input::placeholder{color:rgba(244,239,232,.4)}
+  .cw-send{width:40px;height:40px;border-radius:50%;background:var(--champagne);border:none;cursor:pointer;color:#1a1410;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .cw-powered{text-align:center;font-size:10.5px;color:rgba(244,239,232,.35);padding:0 0 10px}
+  .cw-powered b{color:rgba(244,239,232,.55)}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="logo"><span class="dot"></span><b>Aiesthetica</b></div>
+  <div class="nav-links">
+    <a href="#oplossing">Oplossing</a>
+    <a href="#cijfers">De cijfers</a>
+    <a href="#werkwijze">Werkwijze</a>
+    <a href="#tarieven">Tarieven</a>
+    <a href="#contact" class="nav-cta">Gratis demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="hero-tag">
+        <span class="line"></span>
+        <span class="eyebrow">Voor esthetische klinieken</span>
+      </div>
+      <h1 class="hero-title">Uw kliniek slaapt nooit.<br><em>Uw receptie ook niet.</em></h1>
+      <p class="hero-sub">Een AI-receptionist die afspraken inplant via Instagram &amp; WhatsApp, vragen over Botox en fillers direct beantwoordt, en no-shows terugwint — 24 uur per dag, in uw eigen stijl.</p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn-primary">Vraag een gratis demo aan →</a>
+        <a href="#cijfers" class="btn-ghost">Bekijk de cijfers →</a>
+      </div>
+      <p style="margin-top:24px;font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:9px">
+        <span style="color:var(--champagne-deep)">✓</span> Live binnen één week · maandelijks opzegbaar · GDPR-conform
+      </p>
+    </div>
+
+    <!-- ===== INTERACTIEVE HERO-DEMO =====
+         Bezoekers kunnen hier live typen en klikken.
+         👉 COWORK: vervang de functie heroRespond() onderaan door een echte
+            call naar de live bot (Claude API). De UI hieronder hoeft niet te wijzigen. -->
+    <div class="device reveal">
+      <div class="device-screen">
+        <div class="dev-head">
+          <div class="dev-av"></div>
+          <div>
+            <div class="nm">Probeer de assistent</div>
+            <div class="st">Live — typ gerust iets</div>
+          </div>
+        </div>
+        <div class="dev-body" id="heroBody"></div>
+        <div class="dev-foot">
+          <input type="text" id="heroInput" placeholder="Stel een vraag…">
+          <button class="dev-send" id="heroSend" aria-label="Verstuur">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- TRUST STRIP -->
+<div class="strip">
+  <div class="wrap strip-inner">
+    <span><b>Instagram</b> DM</span>
+    <span><b>WhatsApp</b> Business</span>
+    <span><b>Messenger</b></span>
+    <span><b>24/7</b> bereikbaar</span>
+    <span><b>NL &amp; FR</b> meertalig</span>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="prob" id="probleem">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Het probleem</span>
+      <h2>Elke gemiste boodschap is een gemiste behandeling.</h2>
+      <p style="color:rgba(244,239,232,.6)">Esthetische klinieken verliezen omzet niet door gebrek aan vraag — maar door berichten die te laat of nooit beantwoord worden.</p>
+    </div>
+    <div class="prob-grid">
+      <div class="prob-card reveal">
+        <div class="big">70%</div>
+        <h3>komt via social</h3>
+        <p>Bijna 70% van de boekingen bij esthetische klinieken ontstaat via social media — vaak buiten kantooruren, wanneer niemand antwoordt.</p>
+      </div>
+      <div class="prob-card reveal" style="transition-delay:.1s">
+        <div class="big">€300+</div>
+        <h3>per no-show</h3>
+        <p>Eén gemiste afspraak van een injectable-behandeling kost al snel €300 tot €550 aan omzet plus productkost — elke week opnieuw.</p>
+      </div>
+      <div class="prob-card reveal" style="transition-delay:.2s">
+        <div class="big">'s nachts</div>
+        <h3>vragen vervliegen</h3>
+        <p>Een potentiële cliënte stelt om 22u een vraag over fillers. Krijgt ze geen antwoord, boekt ze morgen bij de kliniek die wél reageerde.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="oplossing">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">De oplossing</span>
+      <h2>Een AI-assistent, getraind op úw kliniek.</h2>
+      <p>Geen standaard chatbot. Een assistent die uw behandelingen, prijzen en toon kent — en aanvoelt als uw beste receptioniste.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal">
+        <div class="ic">◷</div>
+        <h3>Boekt afspraken automatisch</h3>
+        <p>Cliënten plannen rechtstreeks in via Instagram of WhatsApp. Synchroon met uw agenda, Google Calendar of Google Sheets — zonder telefoontjes.</p>
+      </div>
+      <div class="feat reveal" style="transition-delay:.08s">
+        <div class="ic">↺</div>
+        <h3>Wint no-shows terug</h3>
+        <p>Automatische herinneringen en een vriendelijke WhatsApp-follow-up brengen niet-verschenen cliënten terug in uw agenda.</p>
+      </div>
+      <div class="feat reveal" style="transition-delay:.16s">
+        <div class="ic">✦</div>
+        <h3>Kwalificeert leads</h3>
+        <p>De assistent herkent of iemand interesse heeft in Botox, fillers of laser, en stuurt enkel échte intakes naar uw team door.</p>
+      </div>
+      <div class="feat reveal" style="transition-delay:.24s">
+        <div class="ic">❝</div>
+        <h3>Spreekt úw taal</h3>
+        <p>In uw eigen stijl en toon, in het Nederlands én Frans. Beantwoordt prijs-, behandeling- en nazorgvragen exact zoals u dat zou doen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS / SOCIAL PROOF -->
+<section class="stats" id="cijfers">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">De cijfers</span>
+      <h2>Waarom dit werkt — geen mening, maar data.</h2>
+      <p>Internationale cijfers uit de esthetische sector laten zien waar de omzet zit, en waarom snelle reactie via social media beslissend is.</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat reveal">
+        <div class="num">~70<small>%</small></div>
+        <div class="lbl">van de boekingen via social media</div>
+        <div class="src">Bron: Portrait, med-spa benchmarkrapport</div>
+      </div>
+      <div class="stat reveal" style="transition-delay:.08s">
+        <div class="num">76,6<small>%</small></div>
+        <div class="lbl">van de klinieken gebruikt Instagram als hoofdkanaal</div>
+        <div class="src">Bron: aesthetic clinic marketing survey (~2.000 klinieken)</div>
+      </div>
+      <div class="stat reveal" style="transition-delay:.16s">
+        <div class="num">51<small>%</small></div>
+        <div class="lbl">noemt Instagram dé bron van nieuwe cliënten</div>
+        <div class="src">Bron: aesthetic clinic marketing survey</div>
+      </div>
+      <div class="stat reveal" style="transition-delay:.24s">
+        <div class="num">5–8<small>k</small></div>
+        <div class="lbl">euro/maand verlies bij 10% no-shows</div>
+        <div class="src">Bron: Pabau, berekening op ~200 afspraken/maand</div>
+      </div>
+    </div>
+    <p class="stats-note">Cijfers afkomstig uit internationale sectoronderzoeken (VS, VK) en med-spa benchmarkrapporten. Bedragen zijn richtwaarden, geen gemeten resultaten per kliniek. Ze illustreren de structurele waarde van snelle, geautomatiseerde opvolging via social media.</p>
+  </div>
+</section>
+
+<!-- ROI CALCULATOR -->
+<section class="roi" id="rekenmodule">
+  <div class="wrap">
+    <div class="roi-card reveal">
+      <div>
+        <span class="eyebrow">Rekenmodule</span>
+        <h2>Wat kosten no-shows úw kliniek?</h2>
+        <p class="roi-intro">Verschuif de balkjes en zie hoeveel omzet u maandelijks misloopt — en wat een assistent die afspraken bevestigt en herinnert kan terugwinnen.</p>
+        <div style="margin-top:30px">
+          <div class="roi-field">
+            <label>Gemiddelde waarde per behandeling <b id="vVal">€250</b></label>
+            <input type="range" id="rVal" min="80" max="600" step="10" value="250">
+          </div>
+          <div class="roi-field">
+            <label>No-shows per week <b id="vNo">5</b></label>
+            <input type="range" id="rNo" min="1" max="25" step="1" value="5">
+          </div>
+        </div>
+      </div>
+      <div class="roi-result">
+        <div class="rlbl">Geschat gemist per maand</div>
+        <div class="rnum" id="rLoss">€5.000</div>
+        <div class="rsub">≈ <span id="rYear">€60.000</span> per jaar aan gemiste omzet</div>
+        <div class="rwin">Wint een assistent slechts <b>30%</b> hiervan terug, dan is dat <b id="rWin">€1.500</b>/maand — ruim meer dan het abonnement.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="werkwijze">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Werkwijze</span>
+      <h2>Live binnen één week.</h2>
+      <p>Geen IT-project. U levert de informatie, wij bouwen en koppelen alles aan uw kanalen.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="bar"></div>
+        <h3>Intake &amp; toon</h3>
+        <p>We leggen samen uw behandelingen, prijzen, FAQ en gewenste toon vast. U beslist hoe uw assistent klinkt.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:.1s">
+        <div class="bar"></div>
+        <h3>Bouw &amp; koppeling</h3>
+        <p>Wij trainen de AI en koppelen Instagram, WhatsApp en uw agenda. U test mee tot het perfect aanvoelt.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:.2s">
+        <div class="bar"></div>
+        <h3>Live &amp; opvolging</h3>
+        <p>Uw assistent gaat live en beantwoordt cliënten 24/7. Wij blijven optimaliseren op basis van échte gesprekken.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="tarieven">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Tarieven</span>
+      <h2>Eén teruggewonnen afspraak per maand verdient het terug.</h2>
+      <p>Transparante maandtarieven. Geen langetermijncontract — u blijft omdat het werkt.</p>
+    </div>
+    <div class="price-grid">
+      <div class="plan reveal">
+        <div class="pname">Essentie</div>
+        <div class="pdesc">Voor klinieken die starten met automatisatie via social.</div>
+        <div class="pprice">€299<span>/maand</span></div>
+        <div class="psetup">+ eenmalig €500 setup</div>
+        <ul>
+          <li>Instagram &amp; Messenger</li>
+          <li>Automatisch afspraken boeken</li>
+          <li>FAQ &amp; prijsvragen</li>
+          <li>Nederlandstalig</li>
+          <li class="off">WhatsApp Business</li>
+          <li class="off">No-show follow-up</li>
+        </ul>
+        <a href="#contact" class="plan-btn">Demo aanvragen</a>
+      </div>
+
+      <div class="plan feat-plan reveal" style="transition-delay:.08s">
+        <div class="pname">Premium</div>
+        <div class="pdesc">De complete receptie-assistent voor groeiende klinieken.</div>
+        <div class="pprice">€449<span>/maand</span></div>
+        <div class="psetup">+ eenmalig €700 setup</div>
+        <ul>
+          <li>Alles uit Essentie</li>
+          <li>WhatsApp Business</li>
+          <li>No-show follow-up &amp; herinneringen</li>
+          <li>Lead-kwalificatie</li>
+          <li>Agenda- &amp; Sheets-koppeling</li>
+          <li>Nederlands &amp; Frans</li>
+        </ul>
+        <a href="#contact" class="plan-btn">Demo aanvragen</a>
+      </div>
+
+      <div class="plan reveal" style="transition-delay:.16s">
+        <div class="pname">Elite</div>
+        <div class="pdesc">Voor klinieken met meerdere vestigingen of hoog volume.</div>
+        <div class="pprice">€699<span>/maand</span></div>
+        <div class="psetup">+ eenmalig €1.000 setup</div>
+        <ul>
+          <li>Alles uit Premium</li>
+          <li>Maatwerk-integraties</li>
+          <li>Meerdere vestigingen</li>
+          <li>Prioritaire support</li>
+          <li>Maandelijkse optimalisatie</li>
+          <li>Toegewijde accountmanager</li>
+        </ul>
+        <a href="#contact" class="plan-btn">Demo aanvragen</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
+      <span class="eyebrow">Veelgestelde vragen</span>
+      <h2>Alles wat u wilt weten.</h2>
+    </div>
+    <div class="faq-wrap">
+      <div class="faq-item reveal">
+        <button class="faq-q">Werkt dit naast mijn bestaande agenda of Doctolib?</button>
+        <div class="faq-a"><p>Ja. De assistent vervangt uw boekingssysteem niet — hij vult het aan. Doctolib of uw agenda regelt de planning; wij nemen de gesprekken op Instagram, WhatsApp en Messenger over die uw systeem niet ziet. Afspraken worden netjes doorgezet naar uw agenda, Google Calendar of Google Sheets.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q">Is dit geen onpersoonlijke chatbot?</button>
+        <div class="faq-a"><p>Nee. De assistent wordt getraind op úw behandelingen, prijzen en toon, en gebruikt correcte taal. Cliënten merken een vlotte, vriendelijke reactie — geen robot met standaardantwoorden. Twijfelgevallen worden altijd naar uw team doorgestuurd.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q">Hoeveel werk is het voor mij?</button>
+        <div class="faq-a"><p>Minimaal. U levert eenmalig uw behandelingen, prijzen en veelgestelde vragen aan — wij bouwen, koppelen en testen alles. Meestal bent u binnen één week live, zonder IT-kennis.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q">Hoe zit het met privacy en GDPR?</button>
+        <div class="faq-a"><p>Gegevens worden uitsluitend gebruikt om afspraken te verwerken en nooit gedeeld met derden voor andere doeleinden. De opzet is conform de GDPR; gevoelige medische vragen worden doorverwezen naar uw team in plaats van automatisch beantwoord.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q">In welke talen werkt de assistent?</button>
+        <div class="faq-a"><p>Nederlands en Frans, en desgewenst Engels. De assistent herkent de taal van de cliënt en antwoordt automatisch in dezelfde taal — ideaal voor België en Nederland.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-q">Zit ik vast aan een lang contract?</button>
+        <div class="faq-a"><p>Nee. U betaalt per maand en kunt maandelijks opzeggen. Wij vertrouwen erop dat u blijft omdat het resultaat oplevert, niet omdat een contract u verplicht.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+  <div class="wrap reveal">
+    <span class="eyebrow">Gratis demo</span>
+    <h2>Zie uw eigen assistent <em>in actie</em> — binnen 48 uur.</h2>
+    <p>Laat uw gegevens achter en ontvang een korte demo, gebouwd rond úw behandelingen en toon. Volledig vrijblijvend.</p>
+
+    <!-- 👉 COWORK: zet hieronder uw Formspree-ID in (action="https://formspree.io/f/XXXX").
+         De JS toont nu al een bevestiging zodat de demo werkt. -->
+    <form class="form-grid" id="leadForm" action="https://formspree.io/f/JOUW_ID" method="POST">
+      <div>
+        <label for="fNaam">Naam</label>
+        <input id="fNaam" name="naam" type="text" required placeholder="Dr. Voornaam Naam">
+      </div>
+      <div>
+        <label for="fKliniek">Kliniek</label>
+        <input id="fKliniek" name="kliniek" type="text" required placeholder="Naam van uw kliniek">
+      </div>
+      <div>
+        <label for="fMail">E-mail</label>
+        <input id="fMail" name="email" type="email" required placeholder="naam@kliniek.be">
+      </div>
+      <div>
+        <label for="fTel">Telefoon / WhatsApp</label>
+        <input id="fTel" name="telefoon" type="tel" placeholder="+32 …">
+      </div>
+      <div class="full">
+        <label for="fBer">Waar wilt u vooral hulp bij? (optioneel)</label>
+        <textarea id="fBer" name="bericht" placeholder="Bijv. no-shows verminderen, Instagram-DM's automatisch beantwoorden…"></textarea>
+      </div>
+      <div class="full">
+        <button type="submit" class="form-submit">Vraag mijn gratis demo aan →</button>
+        <p class="form-note">Geen verplichtingen. Wij reageren doorgaans binnen één werkdag.</p>
+      </div>
+    </form>
+    <div class="form-ok" id="formOk">Bedankt! ✨ Uw aanvraag is verzonden. U hoort doorgaans binnen één werkdag van ons.</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="logo"><span class="dot"></span><b>Aiesthetica</b></div>
+      <div class="foot-links">
+        <a href="#oplossing">Oplossing</a>
+        <a href="#cijfers">De cijfers</a>
+        <a href="#tarieven">Tarieven</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 Aiesthetica — AI-assistenten voor esthetische klinieken.</span>
+      <span>Vlaanderen &amp; Nederland · domkusaivaras@gmail.com</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== CHAT WIDGET (DEMO — koppel live bot via Cowork) ===== -->
+<button class="cw-launch" id="cwLaunch" aria-label="Open chat">
+  <span class="cw-badge">1</span>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+</button>
+
+<div class="cw-panel" id="cwPanel">
+  <div class="cw-head">
+    <div class="av"></div>
+    <div>
+      <div class="nm">Aiesthetica Assistent</div>
+      <div class="st">Online</div>
+    </div>
+    <button class="cw-close" id="cwClose">×</button>
+  </div>
+  <div class="cw-demo-tag">Live demo — stel uw vraag</div>
+  <div class="cw-body" id="cwBody"></div>
+  <div class="cw-foot">
+    <input type="text" id="cwInput" placeholder="Typ een bericht…">
+    <button class="cw-send" id="cwSend" aria-label="Verstuur">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+  <div class="cw-powered">Aangedreven door <b>Aiesthetica AI</b></div>
+</div>
+
+<script>
+  // nav scroll state
+  const nav=document.getElementById('nav');
+  addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>30));
+
+  // reveal on scroll
+  const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.14});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // ===== LIVE BOT (Claude API via Aigentera backend) =====
+  var API_BASE='https://aigentera-messenger.onrender.com';
+  async function askBot(history,text){
+    history.push({role:'user',content:text});
+    const r=await fetch(API_BASE+'/api/chat/aiesthetica',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:history})
+    });
+    const d=await r.json();
+    if(!d.reply){history.pop();throw new Error(d.error||'geen antwoord');}
+    const reply=d.reply.replace(/\*\*?([^*]+)\*\*?/g,'$1');
+    history.push({role:'assistant',content:reply});
+    return reply;
+  }
+  const BOT_ERR='Sorry, er ging even iets mis. Probeer het zo opnieuw \u{1F64F}';
+
+  // ===== chat widget (live) =====
+  const panel=document.getElementById('cwPanel'),
+        body=document.getElementById('cwBody'),
+        input=document.getElementById('cwInput');
+  let started=false;
+
+  document.getElementById('cwLaunch').onclick=()=>{
+    panel.classList.add('open');
+    document.querySelector('.cw-badge').style.display='none';
+    if(!started){started=true;runDemo();}
+  };
+  document.getElementById('cwClose').onclick=()=>panel.classList.remove('open');
+
+  function add(text,who){
+    const m=document.createElement('div');
+    m.className='cw-msg '+who;m.textContent=text;
+    body.appendChild(m);body.scrollTop=body.scrollHeight;
+  }
+  function typing(){
+    const t=document.createElement('div');t.className='cw-typing';
+    t.innerHTML='<span></span><span></span><span></span>';
+    body.appendChild(t);body.scrollTop=body.scrollHeight;return t;
+  }
+  function chips(list){
+    const c=document.createElement('div');c.className='cw-chips';
+    list.forEach(l=>{const b=document.createElement('button');b.className='cw-chip';b.textContent=l;
+      b.onclick=()=>{c.remove();add(l,'usr');respond(l);};c.appendChild(b);});
+    body.appendChild(c);body.scrollTop=body.scrollHeight;
+  }
+  function botSay(text,after,then){
+    const t=typing();
+    setTimeout(()=>{t.remove();add(text,'bot');then&&then();},after||1100);
+  }
+  function runDemo(){
+    botSay('Welkom bij uw kliniek ✨ Ik ben uw AI-assistent. Waarmee kan ik u helpen?',900,()=>{
+      chips(['Botox','Fillers','Afspraak maken']);
+    });
+  }
+  // 👉 Live bot: echte Claude API via backend
+  var cwHistory=[],cwBusy=false;
+  function respond(q){
+    if(cwBusy)return;cwBusy=true;
+    const t=typing();
+    askBot(cwHistory,q)
+      .then(reply=>{t.remove();add(reply,'bot');})
+      .catch(()=>{t.remove();add(BOT_ERR,'bot');})
+      .finally(()=>{cwBusy=false;});
+  }
+  function sendTyped(){
+    const v=input.value.trim();if(!v)return;
+    add(v,'usr');input.value='';respond(v);
+  }
+  document.getElementById('cwSend').onclick=sendTyped;
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')sendTyped();});
+
+  /* ============================================================
+     HERO LIVE-DEMO  (bezoekers kunnen hier zelf chatten)
+     ------------------------------------------------------------
+     👉 COWORK / live bot:
+        Vervang ALLEEN de functie heroRespond(text) hieronder door
+        een echte fetch() naar de Claude API. Voorbeeld:
+
+        async function heroRespond(text){
+          const t=heroTyping();
+          const r=await fetch('/api/chat',{method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({message:text})});
+          const data=await r.json();
+          t.remove(); heroAdd(data.reply,'bot');
+        }
+
+     De rest van de UI (heroAdd, heroTyping, input, chips) blijft werken.
+     ============================================================ */
+  const heroBody=document.getElementById('heroBody'),
+        heroInput=document.getElementById('heroInput');
+  let heroStarted=false;
+
+  function heroAdd(text,who){
+    const m=document.createElement('div');
+    m.className='bub '+who;m.style.animationDelay='0s';m.textContent=text;
+    heroBody.appendChild(m);heroBody.scrollTop=heroBody.scrollHeight;
+  }
+  function heroTyping(){
+    const t=document.createElement('div');t.className='dev-typing';
+    t.innerHTML='<span></span><span></span><span></span>';
+    heroBody.appendChild(t);heroBody.scrollTop=heroBody.scrollHeight;return t;
+  }
+  function heroChips(list){
+    const c=document.createElement('div');c.className='dev-chips';
+    list.forEach(l=>{const b=document.createElement('button');b.className='dev-chip';b.textContent=l;
+      b.onclick=()=>{c.remove();heroAdd(l,'usr');heroRespond(l);};c.appendChild(b);});
+    heroBody.appendChild(c);heroBody.scrollTop=heroBody.scrollHeight;
+  }
+  function heroBot(text,after,then){
+    const t=heroTyping();
+    setTimeout(()=>{t.remove();heroAdd(text,'bot');then&&then();},after||1000);
+  }
+
+  // --- LIVE BOT: echte Claude API via backend (aparte historie) ---
+  var heroHistory=[],heroBusy=false;
+  function heroRespond(q){
+    if(heroBusy)return;heroBusy=true;
+    const t=heroTyping();
+    askBot(heroHistory,q)
+      .then(reply=>{t.remove();heroAdd(reply,'bot');})
+      .catch(()=>{t.remove();heroAdd(BOT_ERR,'bot');})
+      .finally(()=>{heroBusy=false;});
+  }
+  // ---------------------------------------------------------------------
+
+  function heroStart(){
+    if(heroStarted)return;heroStarted=true;
+    heroBot('Welkom ✨ Ik ben uw AI-assistent. Stel gerust een vraag, of kies hieronder.',900,()=>heroChips(['Botox','Fillers','Afspraak']));
+  }
+  function heroSendTyped(){
+    const v=heroInput.value.trim();if(!v)return;
+    heroAdd(v,'usr');heroInput.value='';heroRespond(v);
+  }
+  document.getElementById('heroSend').onclick=heroSendTyped;
+  heroInput.addEventListener('keydown',e=>{if(e.key==='Enter')heroSendTyped();});
+  heroInput.addEventListener('focus',heroStart);
+  // start het gesprek zodra de hero in beeld komt
+  new IntersectionObserver((es,o)=>{es.forEach(e=>{if(e.isIntersecting){heroStart();o.disconnect();}})},{threshold:.4}).observe(heroBody);
+
+  /* ROI rekenmodule */
+  const rVal=document.getElementById('rVal'),rNo=document.getElementById('rNo');
+  function euro(n){return '€'+Math.round(n).toLocaleString('nl-NL');}
+  function calcRoi(){
+    const v=+rVal.value,no=+rNo.value;
+    const month=v*no*4.33;            // no-shows/week × waarde × weken/maand
+    document.getElementById('vVal').textContent=euro(v);
+    document.getElementById('vNo').textContent=no;
+    document.getElementById('rLoss').textContent=euro(month);
+    document.getElementById('rYear').textContent=euro(month*12);
+    document.getElementById('rWin').textContent=euro(month*0.30);
+  }
+  rVal.addEventListener('input',calcRoi);rNo.addEventListener('input',calcRoi);calcRoi();
+
+  /* FAQ accordion */
+  document.querySelectorAll('.faq-q').forEach(q=>{
+    q.onclick=()=>{
+      const item=q.parentElement,a=item.querySelector('.faq-a');
+      const open=item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i=>{i.classList.remove('open');i.querySelector('.faq-a').style.maxHeight=null;});
+      if(!open){item.classList.add('open');a.style.maxHeight=a.scrollHeight+'px';}
+    };
+  });
+
+  /* contact form — toon bevestiging (Cowork koppelt echte Formspree) */
+  const lead=document.getElementById('leadForm');
+  lead.addEventListener('submit',e=>{
+    e.preventDefault();
+    // 👉 COWORK: als Formspree-ID is ingevuld, verwijder e.preventDefault()
+    //    en laat het formulier normaal verzenden, of gebruik fetch().
+    lead.style.display='none';
+    document.getElementById('formOk').style.display='block';
+  });
+</script>
+</body>
+</html>
