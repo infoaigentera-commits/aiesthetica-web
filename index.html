@@ -672,9 +672,8 @@
     <h2>Zie uw eigen assistent <em>in actie</em> — binnen 48 uur.</h2>
     <p>Laat uw gegevens achter en ontvang een korte demo, gebouwd rond úw behandelingen en toon. Volledig vrijblijvend.</p>
 
-    <!-- 👉 COWORK: zet hieronder uw Formspree-ID in (action="https://formspree.io/f/XXXX").
-         De JS toont nu al een bevestiging zodat de demo werkt. -->
-    <form class="form-grid" id="leadForm" action="https://formspree.io/f/JOUW_ID" method="POST">
+    <form class="form-grid" id="leadForm" action="https://formspree.io/f/xjgdyaak" method="POST">
+      <input type="hidden" name="_subject" value="Nieuwe demo-aanvraag — aiesthetica.com">
       <div>
         <label for="fNaam">Naam</label>
         <input id="fNaam" name="naam" type="text" required placeholder="Dr. Voornaam Naam">
@@ -923,15 +922,15 @@
     };
   });
 
-  /* contact form — toon bevestiging (Cowork koppelt echte Formspree) */
+  /* contact form — AJAX naar Formspree */
   const lead=document.getElementById('leadForm');
-  lead.addEventListener('submit',e=>{
+  lead.addEventListener('submit',async e=>{
     e.preventDefault();
-    // 👉 COWORK: als Formspree-ID is ingevuld, verwijder e.preventDefault()
-    //    en laat het formulier normaal verzenden, of gebruik fetch().
-    lead.style.display='none';
-    document.getElementById('formOk').style.display='block';
-  });
-</script>
-</body>
-</html>
+    const btn=lead.querySelector('.form-submit');
+    btn.disabled=true;btn.textContent='Versturen…';
+    try{
+      const r=await fetch(lead.action,{method:'POST',headers:{'Accept':'application/json'},body:new FormData(lead)});
+      if(r.ok){
+        lead.style.display='none';
+        document.getElementById('formOk').style.display='block';
+      }else{throw ne
