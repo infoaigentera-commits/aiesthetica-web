@@ -933,4 +933,12 @@
       if(r.ok){
         lead.style.display='none';
         document.getElementById('formOk').style.display='block';
-      }else{throw ne
+      }else{throw new Error('submit failed');}
+    }catch(_){
+      btn.disabled=false;btn.textContent='Vraag mijn gratis demo aan →';
+      alert('Er ging iets mis bij het versturen. Probeer het opnieuw, of mail ons rechtstreeks: info@aiesthetica.com');
+    }
+  });
+</script>
+</body>
+</html>
